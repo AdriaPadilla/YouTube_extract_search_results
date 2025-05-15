@@ -5,6 +5,13 @@ import glob
 from isodate import parse_duration
 from datetime import datetime
 import os
+import re
+
+def clean_illegal_chars(value):
+    if isinstance(value, str):
+        # Elimina caracteres de control no permitidos por Excel
+        return re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F]', '', value)
+    return value
 
 def cleaner(query, df, final_file):
     ## INFORMATION
@@ -13,30 +20,36 @@ def cleaner(query, df, final_file):
     ## It's not a big problem, and will save a lot of time trying to compose the Dataset in Excel.
 
     print(f"===> TOTAL UNIQUE VIDEOS IN DATASET (Drop Duplicated Video_id): {df.shape[0]}")
-    df.replace({'\t': ' '}, regex=True)
-    df.replace({'\r': ' '}, regex=True)
-    df.replace({'\n': ' '}, regex=True)
-    df.replace({'"': "'"}, regex=True)
 
+    # Reemplazos básicos
+    df = df.replace({'\t': ' ', '\r': ' ', '\n': ' ', '"': "'"}, regex=True)
+
+    # Elimina filas sin fecha de publicación
     df = df[df['video_published_at'].notna()]
 
-    numeric_cols = ["channel_view_count","channel_video_count","video_duration_seconds", "video_view_count", "video_category", "channel_subscribers_count", "channel_subscribers_count"]
+    # Limpieza numérica
+    numeric_cols = [
+        "channel_view_count", "channel_video_count", "video_duration_seconds",
+        "video_view_count", "video_category", "channel_subscribers_count"
+    ]
     for col in numeric_cols:
-        df[f"{col}"] = df[f"{col}"].fillna(0)
-        df = df[df[f'{col}'].notna()]
+        df[col] = df[col].fillna(0)
+        df = df[df[col].notna()]
         print(f"Drop '{col}' NANS {df.shape}")
-        df[f'{col}'] = df[f'{col}'].replace({',': '.'}, regex=True)
-        df[f'{col}'] = df[f'{col}'].replace({"null": 0}, regex=True)
-        df[f'{col}'] = df[f'{col}'].replace({' ': 0}, regex=True)
+        df[col] = df[col].replace({',': '.', 'null': 0, ' ': 0}, regex=True)
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+        df = df[df[col].notna()]
+        df[col] = df[col].astype(int)
 
-        df[f'{col}'] = pd.to_numeric(df[f'{col}'], errors='coerce')
-        df = df[df[f'{col}'].notna()]
-        df[f'{col}'] = df[f'{col}'].astype(int)
 
+
+    # Limpieza de caracteres ilegales en todo el DataFrame
+    df = df.applymap(clean_illegal_chars)
 
     print(f"===> Dataset shape AFT Cleaning: {df.shape}")
     print(f"===> Output file in: {final_file}")
-    #df.to_csv(f"{final_file}", index=False, sep="\t", quotechar='"', lineterminator="\r\n")
+
+    # Exporta a Excel (puedes cambiar a CSV si prefieres)
     df.to_excel(f"{final_file}", index=False)
 
 
@@ -57,7 +70,7 @@ def parser(query):
         print(f"==> No Videos to export in {raw_video_data_folder}/")
         pass
     else:
-        final_file = f"{query.output_folder}/dataset-{query.search_keyword}-{query.order}-{query.now.replace(" ","T")}.xlsx"
+        final_file = f"{query.output_folder}/dataset-{query.search_keyword}-from-{query.search_start_date}-to-{query.search_end_date}-{query.order}-{query.time_fragmentation}-{query.now.replace(" ","T")}.xlsx"
         if os.path.exists(final_file):
             print("DATASET YET EXISTS")
             pass

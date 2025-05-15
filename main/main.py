@@ -2,8 +2,7 @@ import query_constructor as constructor
 import search_module as search
 import video_data_module as video
 import export_module as export
-from datetime import date, timedelta
-
+from datetime import datetime, timedelta
 
 # DUMMIE VARIABLES DON'T TOUCH THIS
 after = None
@@ -11,20 +10,19 @@ before = None
 days = None
 start_date = None
 end_date = None
-iterations = 1 # Cambia este valor según sea necesario
 
-search_keywords = ['impuestos españa']
-region = "ES"
-language = "es-ES"
+search_keywords = ["your keywords here"] # can be a single or list of keywords.
+region = ""
+language = ""
 order = "relevance"
 max_results = 50
-search_start_date = date(2024, 1, 1) #### YYYY, month, day
-search_end_date = date(2025, 1, 1)
+search_start_date = datetime(2025, 1, 1) #### YYYY, month, day
+search_end_date = datetime(2025, 3, 31) #### YYYY, month, day
+time_fragmentation = ["day"] ### Search granularity within start and end period --> Accepted values: "day", "hour"
 
 if __name__ == "__main__":
 
-    for i in range(iterations):
-        print(f"Iniciando iteración {i + 1} de {iterations}...")
+    for fragmentation in time_fragmentation:
 
         for search_keyword in search_keywords:
             # Building query_params class
@@ -39,14 +37,18 @@ if __name__ == "__main__":
                 search_folder,
                 video_folder,
                 order,
-                max_results
+                max_results,
+                fragmentation
             )
             query = constructor.create_folders(query)
+
+            # Debug: Print query parameters
+            print(f"Query parameters: {vars(query)}")
 
             # Execution
             search.search_controller(query)
             video.video_data_controller(query)
             export.parser(query)
 
-        print(f"Finalizada iteración {i + 1} de {iterations}.")
+        print(f"Finalizada iteración {fragmentation}.")
 

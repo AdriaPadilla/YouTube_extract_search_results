@@ -5,6 +5,7 @@ from googleapiclient.errors import HttpError
 import os
 import json
 import time
+
 def yt_search_api_query(query, next_token, after, before, loop):
 
     filename = f"{query.search_folder}/search_results-from-{after}-to-{before}-{loop}.json"
@@ -95,25 +96,24 @@ def search_controller(query):
     # SET COUNTERS FOR THE QUERY TO 0
     next_token = None
 
-    # Preparing day by day search. 1 day steps
-    delta = timedelta(days=1)
+    # Determine the time delta based on the time_fragmentation parameter
+    if query.time_fragmentation == "day":
+        delta = timedelta(days=1)
+    elif query.time_fragmentation == "hour":
+        delta = timedelta(hours=1)
+    else:
+        raise ValueError("time_fragmentation must be either 'day' or 'hour'")
+
     start_date = query.search_start_date
     end_date = query.search_end_date
-    date_diff = end_date-start_date
-    days = date_diff.days
-    days = days +1
-    quota = days*100
-    loop = 1
 
-    print(f"==> ALERT: You're going to perform at least {days} 'search:list' YouTube API endpoint requests")
+    loop = 1
+    print(f"==> ALERT: You're going to perform at least {(end_date - start_date).days * 24 + 1} 'search:list' YouTube API endpoint requests")
 
     # ITERATE BETWEEN AFTER AND BEFORE DATES
     while start_date <= end_date:
-        after = start_date.strftime("%Y-%m-%dT00:00:00Z")
-        before = start_date + delta
-        before = before.strftime("%Y-%m-%dT00:00:00Z")
-        start_date += delta
-
+        after = start_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+        before = (start_date + delta).strftime("%Y-%m-%dT%H:%M:%SZ")
         yt_search_api_query(query, next_token, after, before, loop)
-
-
+        start_date += delta
+        loop += 1

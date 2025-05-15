@@ -3,7 +3,7 @@ output_base_folder = "outputs"
 import datetime
 
 class query_params:
-    def __init__(self,search_keyword,region,language,search_start_date,search_end_date, search_folder, video_folder, order, max_results):
+    def __init__(self,search_keyword,region,language,search_start_date,search_end_date, search_folder, video_folder, order, max_results, time_fragmentation):
         self.search_keyword = search_keyword
         self.region = region
         self.language = language
@@ -13,12 +13,14 @@ class query_params:
         self.video_folder = video_folder
         self.order = order
         self.max_results = max_results
+        self.time_fragmentation = time_fragmentation
 
 def create_folders(query):
     now = datetime.datetime.now()
-    search_folder = f"{output_base_folder}/{query.search_keyword}-{now}/search_results"
-    video_folder = f"{output_base_folder}/{query.search_keyword}-{now}/video_data"
-    output_folder = f"{output_base_folder}/{query.search_keyword}-{now}"
+    now = now.replace(microsecond=0)
+    search_folder = f"{output_base_folder}/{query.search_keyword}-{query.time_fragmentation}-from-{query.search_start_date}-to-{query.search_end_date}-{now}/search_results"
+    video_folder = f"{output_base_folder}/{query.search_keyword}-{query.time_fragmentation}-from-{query.search_start_date}-to-{query.search_end_date}-{now}/video_data"
+    output_folder = f"{output_base_folder}/{query.search_keyword}-{query.time_fragmentation}-from-{query.search_start_date}-to-{query.search_end_date}-{now}"
 
     # Create folders for SEARCH QUERY raw data (json files)
     if not os.path.exists(search_folder):

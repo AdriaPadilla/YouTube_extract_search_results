@@ -8,7 +8,7 @@ import time
 
 def yt_search_api_query(query, next_token, after, before, loop):
 
-    filename = f"{query.search_folder}/search_results-from-{after}-to-{before}-{loop}.json"
+    filename = f"{query.search_folder}/search_results-for-{query.search_keyword}-from-{after}-to-{before}-{loop}.json"
 
     # This block checks if file exists
     if os.path.exists(filename):
@@ -32,7 +32,7 @@ def yt_search_api_query(query, next_token, after, before, loop):
 
             response = youtube.search().list(
                     q=query.search_keyword,
-                    part="id",
+                    part="snippet",
                     maxResults=query.max_results, # This is max in each request
                     type="video",
                     safeSearch="none",
@@ -97,12 +97,14 @@ def search_controller(query):
     next_token = None
 
     # Determine the time delta based on the time_fragmentation parameter
-    if query.time_fragmentation == "day":
+    if query.time_fragmentation == "week":
+        delta = timedelta(days=7)
+    elif query.time_fragmentation == "day":
         delta = timedelta(days=1)
     elif query.time_fragmentation == "hour":
         delta = timedelta(hours=1)
     else:
-        raise ValueError("time_fragmentation must be either 'day' or 'hour'")
+        raise ValueError("time_fragmentation must be either 'week', 'day' or 'hour'")
 
     start_date = query.search_start_date
     end_date = query.search_end_date

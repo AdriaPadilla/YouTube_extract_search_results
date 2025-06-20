@@ -11,14 +11,14 @@ days = None
 start_date = None
 end_date = None
 
-search_keywords = ["your keywords here"] # can be a single or list of keywords.
+search_keywords = ['Your Keywords here'] # Keywords or list of them. 
 region = ""
 language = ""
 order = "relevance"
 max_results = 50
-search_start_date = datetime(2025, 1, 1) #### YYYY, month, day
-search_end_date = datetime(2025, 3, 31) #### YYYY, month, day
-time_fragmentation = ["day"] ### Search granularity within start and end period --> Accepted values: "day", "hour"
+search_start_date = datetime(2010, 1, 1) #### YYYY, month, day
+search_end_date = datetime(2024, 1, 31) #### YYYY, month, day
+time_fragmentation = ["week"] ### Search granularity within start and end period --> Accepted values: "week","day", "hour"
 
 if __name__ == "__main__":
 
@@ -51,4 +51,3 @@ if __name__ == "__main__":
             export.parser(query)
 
         print(f"Finalizada iteración {fragmentation}.")
-
